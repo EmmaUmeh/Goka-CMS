@@ -57,12 +57,13 @@ func main() {
 
 	// Auto migrate database models
 	db.AutoMigrate(&models.User{}) // This will create the users and tokens tables if they don't exist
-
+	db.AutoMigrate(&models.Task{})
 	// Create a new Gin router
 	router := gin.Default()
 
 	// Setup routes
 	routers.AuthRoutes(router, db)
+	routers.TaskRoutes(router, db)
 
 	// Enable CORS
 	handler := cors.Default().Handler(router)

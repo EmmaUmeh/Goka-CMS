@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 var SECRET_KEY string
 
@@ -48,7 +49,13 @@ func Signup(c *gin.Context, db *gorm.DB) {
 		
 		return
 	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err!= nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
 
+	user.Password = string(hashedPassword)
 	userArray := []models.User{user}
 
 	token := jwt.New(jwt.SigningMethodHS256)
@@ -79,10 +86,18 @@ func Login(c *gin.Context, db *gorm.DB) {
 	}
 
 	// Placeholder for password verification
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(user.Password))
+	if err!= nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
 	if!verifyPassword(user.Email, user.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
+
+	
+	
 
 	// Generate a new token
 	token := jwt.New(jwt.SigningMethodHS256)
