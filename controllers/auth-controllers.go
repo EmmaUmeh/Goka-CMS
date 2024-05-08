@@ -78,44 +78,43 @@ func Signup(c *gin.Context, db *gorm.DB) {
 }
 
 func Login(c *gin.Context, db *gorm.DB) {
-	var user models.User
+    var user models.User
 
-	if err := c.BindJSON(&user); err!= nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Error decoding credentials"})
-		return
-	}
+    if err := c.BindJSON(&user); err!= nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Error decoding credentials"})
+        return
+    }
 
-	// Placeholder for password verification
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(user.Password))
-	if err!= nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
-	if!verifyPassword(user.Email, user.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
+    var foundUser models.User
+    if err := db.Where("email =?", user.Email).First(&foundUser).Error; err!= nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+    }
 
-	
-	
+    // Verify the password
+    if err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(user.Password)); err!= nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+        return
+    }
 
-	// Generate a new token
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
-	claims["userId"] = user.Email
-	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+    // Generate a new token
+    token := jwt.New(jwt.SigningMethodHS256)
+    claims := token.Claims.(jwt.MapClaims)
+    claims["userId"] = foundUser.ID // Use the user's ID, not email
+    claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
-	tokenString, err := token.SignedString([]byte(SECRET_KEY))
-	if err!= nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-		return
-	}
+    tokenString, err := token.SignedString([]byte(SECRET_KEY))
+    if err!= nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+        return
+    }
 
-	c.JSON(http.StatusOK, gin.H{
-        "User Login Successfully": user,
+    c.JSON(http.StatusOK, gin.H{
+        "User Login Successfully": foundUser,
         "token": tokenString, // Include the token in the response
     })
 }
+
 
 // Placeholder function for password verification
 func verifyPassword(email, password string) bool {

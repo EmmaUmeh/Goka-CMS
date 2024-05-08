@@ -12,5 +12,5 @@ type Task struct {
   Body  string `json:"body"`
   CreatedAt time.Time
   UpdatedAt time.Time
-
+	User  User   `json:"user"`
 }

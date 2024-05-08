@@ -41,6 +41,27 @@ func CreateUserTask(c *gin.Context, db *gorm.DB) {
 	})
 }
 
+func GetTaskByID(c *gin.Context, db *gorm.DB, id string) {
+	var task models.Task
+
+	// Attempt to find the task in the database
+	if err := db.First(&task, id).Error; err!= nil {
+		// If the task is not found, return a 404 Not Found status
+		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+		return
+	}
+
+	if err := db.Preload("User").Where("id =?", id).First(&task).Error; err!= nil {
+		c.JSON(404, gin.H{"error": "Task not found"})
+		return
+	}
+
+	// If the task is found, return the task data
+	c.JSON(http.StatusOK, gin.H{
+		"Task": task,
+	})
+}
+
 // CreateTask attempts to create a new task in the database.
 func CreateTask(db *gorm.DB, task *models.Task) error {
 	return db.Create(task).Error

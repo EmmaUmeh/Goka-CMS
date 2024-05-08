@@ -11,6 +11,7 @@ import (
 	"github.com/EmmaUmeh/Goka-CMS/models"
 	"github.com/EmmaUmeh/Goka-CMS/routers"
 	"github.com/EmmaUmeh/Goka-CMS/utils"
+ // Import your middleware package
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
@@ -24,7 +25,7 @@ const (
 func generateRandomString(length int) (string, error) {
 	bytes := make([]byte, length)
 	_, err := rand.Read(bytes)
-	if err != nil {
+	if err!= nil {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
@@ -33,7 +34,7 @@ func generateRandomString(length int) (string, error) {
 func main() {
 	// Generate a random secret key
 	secretKey, err := generateRandomString(SecretKeyLength)
-	if err != nil {
+	if err!= nil {
 		log.Fatalf("Error generating random string: %v", err)
 	}
 
@@ -42,15 +43,15 @@ func main() {
 	// Set Gin to release mode
 	gin.SetMode(gin.ReleaseMode)
 
-	// Load .env file
+	// Load.env file
 	err = godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+	if err!= nil {
+		log.Fatalf("Error loading.env file: %v", err)
 	}
 
 	// Connect to the database
 	db, err := utils.ConnectDB()
-	if err != nil {
+	if err!= nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
@@ -58,8 +59,12 @@ func main() {
 	// Auto migrate database models
 	db.AutoMigrate(&models.User{}) // This will create the users and tokens tables if they don't exist
 	db.AutoMigrate(&models.Task{})
+
 	// Create a new Gin router
 	router := gin.Default()
+
+	// Apply your middleware to the router
+	// router.Use(api.AuthMiddleware()) // Assuming AuthMiddleware is exported from your middleware package
 
 	// Setup routes
 	routers.AuthRoutes(router, db)
