@@ -17,6 +17,10 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
+const (
+	SecretKeyLength = 32 // Length of the secret key
+)
+
 func generateRandomString(length int) (string, error) {
 	bytes := make([]byte, length)
 	_, err := rand.Read(bytes)
@@ -27,14 +31,10 @@ func generateRandomString(length int) (string, error) {
 }
 
 func main() {
-	// Define the length of the random string (you can adjust this according to your needs)
-	length := 32
-
-	// Generate a random string
-	secretKey, err := generateRandomString(length)
+	// Generate a random secret key
+	secretKey, err := generateRandomString(SecretKeyLength)
 	if err != nil {
-		fmt.Println("Error generating random string:", err)
-		return
+		log.Fatalf("Error generating random string: %v", err)
 	}
 
 	fmt.Println("Generated Secret Key:", secretKey)
@@ -45,23 +45,24 @@ func main() {
 	// Load .env file
 	err = godotenv.Load()
 	if err != nil {
-		log.Fatalf("error loading .env file: %v", err)
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
 	// Connect to the database
 	db, err := utils.ConnectDB()
 	if err != nil {
-		panic("Failed to connect to database")
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
+	// Auto migrate database models
 	db.AutoMigrate(&models.User{}) // This will create the users and tokens tables if they don't exist
 
 	// Create a new Gin router
 	router := gin.Default()
 
 	// Setup routes
-	routers.SetupRoutes(router, db)
+	routers.AuthRoutes(router, db)
 
 	// Enable CORS
 	handler := cors.Default().Handler(router)

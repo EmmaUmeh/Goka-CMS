@@ -24,9 +24,13 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func SetupRoutes(router *gin.Engine, db *gorm.DB) {
+func AuthRoutes(router *gin.Engine, db *gorm.DB) {
 	router.POST("/auth/signup", func(c *gin.Context) {
 		controllers.Signup(c, db)
+	})
+
+	router.POST("/auth/login", func(c *gin.Context) {
+		controllers.Login(c, db)
 	})
 	// Add other routes here if needed
 }
