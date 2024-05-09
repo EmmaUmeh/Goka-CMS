@@ -69,6 +69,7 @@ func main() {
 	// Setup routes
 	routers.AuthRoutes(router, db)
 	routers.TaskRoutes(router, db)
+	routers.CreateUserEventRoutes(router, db)
 
 	// Enable CORS
 	handler := cors.Default().Handler(router)
